@@ -1,36 +1,116 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JEV Studio
 
-## Getting Started
+English | [中文](./README-zh.md)
 
-First, run the development server:
+JEV Studio is a small Next.js evaluation lab for turning natural-language input into structured signals with the Typesafe SystemOne API.
+
+It provides three evaluation modes:
+
+- **Noul** — binary signal detection
+- **Choice** — multi-class routing with custom options
+- **Score** — ordinal scoring with custom levels
+
+The background is shared across all three tabs, while each tab keeps its own question. Drafts, including the current mode, questions, criteria, API key, and language preference, are stored in the current browser with `localStorage`.
+
+## Preview
+
+English interface:
+
+![JEV Studio in English](./public/sample/image-en.png)
+
+Chinese interface:
+
+![JEV Studio in Chinese](./public/sample/image-zh.png)
+
+Example result:
+
+![JEV Studio result](./public/sample/result.png)
+
+## Requirements
+
+- Node.js 20.9 or later
+- pnpm 11 (recommended; npm also works)
+- A Typesafe API key
+
+## Getting started
+
+Install dependencies:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create a local environment file:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cp .env.example .env
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Set your key in `.env`:
 
-## Learn More
+```env
+TYPESAFE_API_KEY=your_typesafe_api_key
+```
 
-To learn more about Next.js, take a look at the following resources:
+Start the development server:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000).
 
-## Deploy on Vercel
+If `TYPESAFE_API_KEY` is not configured on the server, the UI displays a field for entering a key. That key is sent only for the current request and is saved in the current browser as part of the local draft.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Usage
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Select **Noul**, **Choice**, or **Score**.
+2. Enter the shared background text.
+3. Enter the question for the selected tab.
+4. For **Choice**, add at least two key/description options.
+5. For **Score**, add at least two scoring levels.
+6. Click **Run evaluation** to send the request.
+7. Review the structured answer, confidence, probabilities, token usage, and raw JSON response.
+
+Use the language toggle in the top-right corner to switch between English and Chinese.
+
+## API route
+
+The browser calls the local route below rather than calling Typesafe directly:
+
+```text
+POST /api/systemone
+```
+
+The route validates the shared `state` and `questions` fields, adds the server-side API key, and forwards the request to:
+
+```text
+https://api.typesafe.ai/v1/systemone
+```
+
+The API key is never hard-coded in the client bundle when it is configured through `.env`.
+
+## Scripts
+
+```bash
+pnpm dev       # Start the development server
+pnpm lint      # Run ESLint
+pnpm build     # Create a production build
+pnpm start     # Start the production server
+```
+
+## Project structure
+
+```text
+app/
+  api/systemone/route.ts  # Typesafe API proxy
+  globals.css             # Global styling and responsive layout
+  layout.tsx              # Root metadata and layout
+  page.tsx                # Interactive evaluation workspace
+public/sample/            # README preview images
+.env.example              # Environment variable template
+```
+
+## License
+
+This project is private and intended for demonstration and internal development.
