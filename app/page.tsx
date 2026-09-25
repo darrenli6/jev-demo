@@ -6,18 +6,19 @@ import Link from "next/link";
 type Mode = "noul" | "choice" | "score";
 type Locale = "en" | "zh";
 type ApiResult = { model?: string; answers?: Record<string, Record<string, unknown>>; usage?: { input_tokens?: number; output_tokens?: number }; error?: string };
+type HealthStatus = "checking" | "online" | "offline" | "unconfigured";
 
 const modeDetails: Record<Mode, { eyebrow: string; title: string }> = { noul: { eyebrow: "Binary signal", title: "Noul" }, choice: { eyebrow: "Multi-class routing", title: "Choice" }, score: { eyebrow: "Ordinal scale", title: "Score" } };
 const translations = {
   en: {
     hero: ["Turn every piece of text,", "into a measurable signal.", "Transform natural language into clear, reliable, actionable judgments."],
     configure: "Define your evaluation", output: "Analysis result", configureKicker: "01 / CONFIGURE", outputKicker: "02 / OUTPUT", configureTabs: "Evaluation type", modes: { noul: { label: "Binary signal", description: "Detect whether a text expresses a clear signal.", question: "Does this message express urgency?", tab: "Judge" }, choice: { label: "Multi-class routing", description: "Identify the best match from your custom categories.", question: "Which team should handle this message?", tab: "Classify" }, score: { label: "Ordinal scale", description: "Measure intensity or degree using an ordered scale.", question: "How frustrated does the customer appear?", tab: "Score" } },
-    apiKey: "TYPESAFE_API_KEY", apiRequired: "REQUIRED · SAVED LOCALLY", apiPlaceholder: "Enter your Typesafe API Key", apiNote: "No .env key detected. This key is stored in your current browser only.", state: "Background", statePlaceholder: "Paste context to analyze, such as a customer message, ticket, or product feedback…", instructions: "Question", criteria: "Criteria", addOption: "+ Add option", addCriterion: "+ Add criterion", keyPlaceholder: "key", optionPlaceholder: "Option description", scorePlaceholder: "Describe what this level represents", submit: "Run evaluation", analyzing: "Analyzing…", emptyTitle: "Ready when you are", emptyDescription: "Fill in the background and question. JEV will return a structured evaluation.", waiting: "WAITING", complete: "COMPLETE", errorKey: "Enter your TYPESAFE_API_KEY first.", errorNoul: "Fill in the background and question before submitting.", errorOptions: "Fill in the background, question, and at least two valid options.", remove: "Remove option", raw: "View raw response", rawHint: "JSON · COLLAPSED BY DEFAULT", recommended: "Recommended category selected from your custom options", scoreLevel: "Score level", direct: "DIRECT SIGNAL", confidence: "confidence", model: "MODEL", tokens: "TOKENS", online: "ONLINE", home: "JEV Studio home", powered: "JEV STUDIO · POWERED BY TYPESAFE", language: "中文", languageLabel: "Switch to Chinese",
+    apiKey: "TYPESAFE_API_KEY", apiRequired: "REQUIRED · SAVED LOCALLY", apiPlaceholder: "Enter your Typesafe API Key", apiNote: "No .env key detected. This key is stored in your current browser only.", state: "Background", statePlaceholder: "Paste context to analyze, such as a customer message, ticket, or product feedback…", instructions: "Question", criteria: "Criteria", addOption: "+ Add option", addCriterion: "+ Add criterion", keyPlaceholder: "key", optionPlaceholder: "Option description", scorePlaceholder: "Describe what this level represents", submit: "Run evaluation", analyzing: "Analyzing…", emptyTitle: "Ready when you are", emptyDescription: "Fill in the background and question. JEV will return a structured evaluation.", waiting: "WAITING", complete: "COMPLETE", errorKey: "Enter your TYPESAFE_API_KEY first.", errorNoul: "Fill in the background and question before submitting.", errorOptions: "Fill in the background, question, and at least two valid options.", remove: "Remove option", raw: "View raw response", rawHint: "JSON · COLLAPSED BY DEFAULT", recommended: "Recommended category selected from your custom options", scoreLevel: "Score level", direct: "DIRECT SIGNAL", confidence: "confidence", model: "MODEL", tokens: "TOKENS", online: "ONLINE", checking: "CHECKING", offline: "OFFLINE", unconfigured: "NOT CONFIGURED", home: "JEV Studio home", powered: "JEV STUDIO · POWERED BY TYPESAFE", language: "中文", languageLabel: "Switch to Chinese",
   },
   zh: {
     hero: ["让每一段文本，", "变得可衡量。", "将自然语言转化为清晰、可靠、可行动的判断。"],
     configure: "定义你的评估", output: "分析结果", configureKicker: "01 / CONFIGURE", outputKicker: "02 / OUTPUT", configureTabs: "评估类型", modes: { noul: { label: "二元信号", description: "判断一段文本是否表达了明确的信号。", question: "这段内容是否表达了紧迫感？", tab: "判断" }, choice: { label: "多分类路由", description: "从自定义分类中识别最匹配的选项。", question: "这条消息应该由哪个团队处理？", tab: "分类" }, score: { label: "有序评分", description: "用有序标准衡量文本中的强度或程度。", question: "客户看起来有多沮丧？", tab: "评分" } },
-    apiKey: "TYPESAFE_API_KEY", apiRequired: "必填 · 仅本地保存", apiPlaceholder: "输入 Typesafe API Key", apiNote: "未检测到 .env 配置，Key 仅保存在当前浏览器中。", state: "背景", statePlaceholder: "粘贴一段需要分析的背景，例如客户消息、工单或产品反馈…", instructions: "问题", criteria: "选项", addOption: "＋ 添加选项", addCriterion: "＋ 添加标准", keyPlaceholder: "key", optionPlaceholder: "选项说明", scorePlaceholder: "描述这一档代表的状态", submit: "运行评估", analyzing: "正在分析…", emptyTitle: "准备好开始了吗？", emptyDescription: "填写左侧背景与问题，JEV 会返回结构化的评估结果。", waiting: "WAITING", complete: "COMPLETE", errorKey: "请先填写 TYPESAFE_API_KEY。", errorNoul: "请填写背景和问题后再提交。", errorOptions: "请填写背景、问题，并至少保留两个有效选项。", remove: "移除选项", raw: "查看原始报文", rawHint: "JSON · 默认折叠", recommended: "推荐分类已从自定义选项中选出", scoreLevel: "评分等级", direct: "直接信号", confidence: "置信度", model: "模型", tokens: "用量", online: "在线", home: "JEV Studio 首页", powered: "JEV STUDIO · POWERED BY TYPESAFE", language: "EN", languageLabel: "切换到英文",
+    apiKey: "TYPESAFE_API_KEY", apiRequired: "必填 · 仅本地保存", apiPlaceholder: "输入 Typesafe API Key", apiNote: "未检测到 .env 配置，Key 仅保存在当前浏览器中。", state: "背景", statePlaceholder: "粘贴一段需要分析的背景，例如客户消息、工单或产品反馈…", instructions: "问题", criteria: "选项", addOption: "＋ 添加选项", addCriterion: "＋ 添加标准", keyPlaceholder: "key", optionPlaceholder: "选项说明", scorePlaceholder: "描述这一档代表的状态", submit: "运行评估", analyzing: "正在分析…", emptyTitle: "准备好开始了吗？", emptyDescription: "填写左侧背景与问题，JEV 会返回结构化的评估结果。", waiting: "WAITING", complete: "COMPLETE", errorKey: "请先填写 TYPESAFE_API_KEY。", errorNoul: "请填写背景和问题后再提交。", errorOptions: "请填写背景、问题，并至少保留两个有效选项。", remove: "移除选项", raw: "查看原始报文", rawHint: "JSON · 默认折叠", recommended: "推荐分类已从自定义选项中选出", scoreLevel: "评分等级", direct: "直接信号", confidence: "置信度", model: "模型", tokens: "用量", online: "在线", checking: "检查中", offline: "离线", unconfigured: "未配置", home: "JEV Studio 首页", powered: "JEV STUDIO · POWERED BY TYPESAFE", language: "EN", languageLabel: "切换到英文",
   },
 } as const;
 type Translation = (typeof translations)[Locale];
@@ -34,6 +35,7 @@ export default function Home() {
   const [questionsByMode, setQuestionsByMode] = useState<QuestionsByMode>({ noul: "", choice: "", score: "" });
   const [apiKey, setApiKey] = useState("");
   const [apiConfigured, setApiConfigured] = useState(true);
+  const [healthStatus, setHealthStatus] = useState<HealthStatus>("checking");
   const [choiceOptions, setChoiceOptions] = useState([{ key: "", value: "" }]);
   const [scoreOptions, setScoreOptions] = useState([""]);
   const [draftLoaded, setDraftLoaded] = useState(false);
@@ -83,10 +85,16 @@ export default function Home() {
   }
 
   useEffect(() => {
-    fetch("/api/systemone")
+    fetch("/api/health")
       .then((response) => response.json())
-      .then((data: { configured?: boolean }) => setApiConfigured(Boolean(data.configured)))
-      .catch(() => setApiConfigured(false));
+      .then((data: { configured?: boolean; status?: HealthStatus }) => {
+        setApiConfigured(Boolean(data.configured));
+        setHealthStatus(data.status || "offline");
+      })
+      .catch(() => {
+        setApiConfigured(false);
+        setHealthStatus("offline");
+      });
   }, []);
 
   useEffect(() => {
@@ -120,7 +128,7 @@ export default function Home() {
   }
 
   return <main className="app-shell"><div className="ambient ambient-one" /><div className="ambient ambient-two" /><div className="grid-overlay" />
-    <header className="topbar"><Link className="brand" href="/" aria-label={text.home}><span className="brand-mark">J</span><span>JEV<span className="brand-muted"> / </span>STUDIO</span></Link><div className="topbar-actions"><div className="status-pill"><span className="status-dot" /> Typesafe API <span className="status-live">{text.online}</span></div><button className="language-toggle" onClick={toggleLocale} aria-label={text.languageLabel}>{text.language}</button></div></header>
+    <header className="topbar"><Link className="brand" href="/" aria-label={text.home}><span className="brand-mark">J</span><span>JEV<span className="brand-muted"> / </span>STUDIO</span></Link><div className="topbar-actions"><div className={`status-pill status-${healthStatus}`}><span className="status-dot" /> Typesafe API <span className="status-live">{text[healthStatus]}</span></div><button className="language-toggle" onClick={toggleLocale} aria-label={text.languageLabel}>{text.language}</button></div></header>
     <section className="hero"><div className="hero-copy"><p className="overline">JEV · EVALUATION LAB</p><h1>{text.hero[0]}<em>{text.hero[1]}</em></h1><p className="hero-subtitle">{text.hero[2]}</p></div><div className="hero-orbit" aria-hidden="true"><span className="orbit-ring ring-a" /><span className="orbit-ring ring-b" /><span className="orbit-core">J</span></div></section>
     <section className="workspace"><div className="panel config-panel"><div className="panel-heading"><div><p className="section-kicker">{text.configureKicker}</p><h2>{text.configure}</h2></div><span className="panel-index">{String(["noul", "choice", "score"].indexOf(mode) + 1).padStart(2, "0")} / 03</span></div>
       <div className="tabs" role="tablist" aria-label={text.configureTabs}>{(Object.keys(modeDetails) as Mode[]).map((item) => <button key={item} className={`tab ${mode === item ? "active" : ""}`} role="tab" aria-selected={mode === item} onClick={() => { setMode(item); setResult(null); setError(""); }}><span>{item}</span><small>{text.modes[item].tab}</small></button>)}</div>

@@ -82,6 +82,14 @@ The browser calls the local route below rather than calling Typesafe directly:
 POST /api/systemone
 ```
 
+The top-bar connection indicator uses the following health-check route:
+
+```text
+GET /api/health
+```
+
+It reports whether the API key is configured and whether the Typesafe endpoint is reachable.
+
 The route validates the shared `state` and `questions` fields, adds the server-side API key, and forwards the request to:
 
 ```text

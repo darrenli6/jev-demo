@@ -82,6 +82,14 @@ pnpm dev
 POST /api/systemone
 ```
 
+顶部状态指示器使用下面的健康检查接口：
+
+```text
+GET /api/health
+```
+
+该接口会返回 API Key 是否已配置，以及 Typesafe 服务是否可以连通。
+
 该路由会校验 `state` 和 `questions`，补充服务端 API Key，然后将请求转发到：
 
 ```text
