@@ -85,17 +85,27 @@ export default function Home() {
   }
 
   useEffect(() => {
-    fetch("/api/health")
-      .then((response) => response.json())
-      .then((data: { configured?: boolean; status?: HealthStatus }) => {
-        setApiConfigured(Boolean(data.configured));
-        setHealthStatus(data.status || "offline");
-      })
-      .catch(() => {
-        setApiConfigured(false);
-        setHealthStatus("offline");
-      });
-  }, []);
+    const hasClientKey = Boolean(apiKey.trim());
+    const timer = window.setTimeout(() => {
+      setHealthStatus("checking");
+      const request = hasClientKey
+        ? fetch("/api/health", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ apiKey: apiKey.trim() }) })
+        : fetch("/api/health");
+      request
+        .then((response) => response.json())
+        .then((data: { configured?: boolean; status?: HealthStatus }) => {
+          // A browser-provided key is only for the current request; keep the
+          // input visible when the server itself has no configured key.
+          if (!hasClientKey) setApiConfigured(Boolean(data.configured));
+          setHealthStatus(data.status || "offline");
+        })
+        .catch(() => {
+          if (!hasClientKey) setApiConfigured(false);
+          setHealthStatus("offline");
+        });
+    }, hasClientKey ? 400 : 0);
+    return () => window.clearTimeout(timer);
+  }, [apiKey]);
 
   useEffect(() => {
     if (!draftLoaded) return;
@@ -130,10 +140,10 @@ export default function Home() {
   return <main className="app-shell"><div className="ambient ambient-one" /><div className="ambient ambient-two" /><div className="grid-overlay" />
     <header className="topbar"><Link className="brand" href="/" aria-label={text.home}><span className="brand-mark">J</span><span>JEV<span className="brand-muted"> / </span>STUDIO</span></Link><div className="topbar-actions"><div className={`status-pill status-${healthStatus}`}><span className="status-dot" /> Typesafe API <span className="status-live">{text[healthStatus]}</span></div><button className="language-toggle" onClick={toggleLocale} aria-label={text.languageLabel}>{text.language}</button></div></header>
     <section className="hero"><div className="hero-copy"><p className="overline">JEV · EVALUATION LAB</p><h1>{text.hero[0]}<em>{text.hero[1]}</em></h1><p className="hero-subtitle">{text.hero[2]}</p></div><div className="hero-orbit" aria-hidden="true"><span className="orbit-ring ring-a" /><span className="orbit-ring ring-b" /><span className="orbit-core">J</span></div></section>
-    <section className="workspace"><div className="panel config-panel"><div className="panel-heading"><div><p className="section-kicker">{text.configureKicker}</p><h2>{text.configure}</h2></div><span className="panel-index">{String(["noul", "choice", "score"].indexOf(mode) + 1).padStart(2, "0")} / 03</span></div>
+    <section className="workspace"><div className="panel config-panel">{!apiConfigured && <div className="api-key-box"><label className="field-label" htmlFor="api-key">{text.apiKey} <span>{text.apiRequired}</span></label><input id="api-key" type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder={text.apiPlaceholder} autoComplete="off" /><p>{text.apiNote}</p></div>}<div className="panel-heading"><div><p className="section-kicker">{text.configureKicker}</p><h2>{text.configure}</h2></div><span className="panel-index">{String(["noul", "choice", "score"].indexOf(mode) + 1).padStart(2, "0")} / 03</span></div>
       <div className="tabs" role="tablist" aria-label={text.configureTabs}>{(Object.keys(modeDetails) as Mode[]).map((item) => <button key={item} className={`tab ${mode === item ? "active" : ""}`} role="tab" aria-selected={mode === item} onClick={() => { setMode(item); setResult(null); setError(""); }}><span>{item}</span><small>{text.modes[item].tab}</small></button>)}</div>
       <div className="mode-intro"><span className="mode-label">{current.eyebrow}</span><h3>{current.title}</h3><p>{current.description}</p></div>
-      <form onSubmit={handleSubmit}>{!apiConfigured && <div className="api-key-box"><label className="field-label" htmlFor="api-key">{text.apiKey} <span>{text.apiRequired}</span></label><input id="api-key" type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder={text.apiPlaceholder} autoComplete="off" /><p>{text.apiNote}</p></div>}<label className="field-label" htmlFor="state">{text.state} <span>STATE</span></label><textarea id="state" value={state} onChange={(event) => setState(event.target.value)} placeholder={text.statePlaceholder} rows={5} /><label className="field-label" htmlFor="instructions">{text.instructions} <span>INSTRUCTIONS</span></label><textarea id="instructions" value={instructions} onChange={(event) => updateQuestion(event.target.value)} placeholder={current.question} rows={3} />
+      <form onSubmit={handleSubmit}><label className="field-label" htmlFor="state">{text.state} <span>STATE</span></label><textarea id="state" value={state} onChange={(event) => setState(event.target.value)} placeholder={text.statePlaceholder} rows={5} /><label className="field-label" htmlFor="instructions">{text.instructions} <span>INSTRUCTIONS</span></label><textarea id="instructions" value={instructions} onChange={(event) => updateQuestion(event.target.value)} placeholder={current.question} rows={3} />
         {mode === "choice" && <div className="criteria-block"><div className="criteria-heading"><label className="field-label">{text.criteria} <span>CRITERIA</span></label><button type="button" className="text-button" onClick={() => setChoiceOptions((items) => [...items, { key: `option${items.length + 1}`, value: "" }])}>{text.addOption}</button></div>{choiceOptions.map((item, index) => <div className="option-row" key={`${index}-${item.key}`}><input aria-label={`${text.criteria} ${index + 1} key`} value={item.key} onChange={(event) => updateChoice(index, "key", event.target.value)} placeholder={text.keyPlaceholder} /><input aria-label={`${text.criteria} ${index + 1} description`} value={item.value} onChange={(event) => updateChoice(index, "value", event.target.value)} placeholder={text.optionPlaceholder} />{choiceOptions.length > 2 && <button type="button" className="remove-button" aria-label={text.remove} onClick={() => setChoiceOptions((items) => items.filter((_, itemIndex) => itemIndex !== index))}>×</button>}</div>)}</div>}
         {mode === "score" && <div className="criteria-block"><div className="criteria-heading"><label className="field-label">{text.criteria} <span>CRITERIA</span></label><button type="button" className="text-button" onClick={() => setScoreOptions((items) => [...items, ""])}>{text.addCriterion}</button></div>{scoreOptions.map((item, index) => <div className="score-row" key={index}><span>{index}</span><input aria-label={`${text.criteria} ${index + 1}`} value={item} onChange={(event) => updateScore(index, event.target.value)} placeholder={text.scorePlaceholder} />{scoreOptions.length > 2 && <button type="button" className="remove-button" aria-label={text.remove} onClick={() => setScoreOptions((items) => items.filter((_, itemIndex) => itemIndex !== index))}>×</button>}</div>)}</div>}
         <button className="submit-button" type="submit" disabled={loading}>{loading ? <><span className="spinner" /> {text.analyzing}</> : <>{text.submit} <span>↗</span></>}</button>{error && <p className="form-error" role="alert">{error}</p>}</form></div>
